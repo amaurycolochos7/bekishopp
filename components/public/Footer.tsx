@@ -68,11 +68,10 @@ export default function Footer({ config }: Props) {
                     </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div className="border-t border-white/10 pt-6 text-center">
                     <a href="/admin/login" className="text-white/40 text-sm hover:text-white/40 cursor-default" title="">
                         © {anio} {nombre}. Todos los derechos reservados.
                     </a>
-                    <p className="text-white/30 text-xs">Hecho con amor</p>
                 </div>
             </div>
         </footer>
