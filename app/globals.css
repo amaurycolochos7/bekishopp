@@ -33,6 +33,23 @@ html {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Animación del badge del carrito */
+@keyframes cart-badge-pop {
+  0% {
+    transform: scale(0.5);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-cart-badge {
+  animation: cart-badge-pop 0.3s ease-out;
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar {
   width: 8px;

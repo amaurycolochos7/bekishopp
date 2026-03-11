@@ -3,6 +3,7 @@ import Header from '@/components/public/Header';
 import Categories from '@/components/public/Categories';
 import Footer from '@/components/public/Footer';
 import WhatsAppFloat from '@/components/public/WhatsAppFloat';
+import CartDrawer from '@/components/public/CartDrawer';
 import type { Configuracion, Categoria } from '@/lib/types';
 
 export const revalidate = 60;
@@ -33,6 +34,8 @@ export default async function CategoriasPage() {
       <Categories categorias={categorias} config={config} />
       <Footer config={config} />
       <WhatsAppFloat whatsapp={whatsapp} />
+      <CartDrawer whatsapp={whatsapp} colorPrimario={config?.color_primario} colorAccento={config?.color_acento} />
     </main>
   );
 }
+

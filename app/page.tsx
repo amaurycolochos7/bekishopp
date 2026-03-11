@@ -7,6 +7,7 @@ import Services from '@/components/public/Services';
 import Contact from '@/components/public/Contact';
 import Footer from '@/components/public/Footer';
 import WhatsAppFloat from '@/components/public/WhatsAppFloat';
+import CartDrawer from '@/components/public/CartDrawer';
 import type { Configuracion, Categoria, Producto, Servicio } from '@/lib/types';
 
 export const revalidate = 60;
@@ -40,11 +41,12 @@ export default async function Home() {
       <Header config={config} />
       <Hero config={config} />
       <Categories categorias={categorias} config={config} />
-      <ProductCatalog productos={productos} categorias={categorias} whatsapp={whatsapp} config={config} />
+      <ProductCatalog productos={productos} categorias={categorias} whatsapp={whatsapp} config={config} servicios={servicios} />
       <Services servicios={servicios} whatsapp={whatsapp} config={config} />
       <Contact config={config} />
       <Footer config={config} />
       <WhatsAppFloat whatsapp={whatsapp} />
+      <CartDrawer whatsapp={whatsapp} colorPrimario={config?.color_primario} colorAccento={config?.color_acento} />
     </main>
   );
 }

@@ -3,6 +3,7 @@ import Header from '@/components/public/Header';
 import Contact from '@/components/public/Contact';
 import Footer from '@/components/public/Footer';
 import WhatsAppFloat from '@/components/public/WhatsAppFloat';
+import CartDrawer from '@/components/public/CartDrawer';
 import type { Configuracion } from '@/lib/types';
 
 export const revalidate = 60;
@@ -27,6 +28,7 @@ export default async function ContactoPage() {
       <Contact config={config} />
       <Footer config={config} />
       <WhatsAppFloat whatsapp={whatsapp} />
+      <CartDrawer whatsapp={whatsapp} colorPrimario={config?.color_primario} colorAccento={config?.color_acento} />
     </main>
   );
 }

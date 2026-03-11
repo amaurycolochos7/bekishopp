@@ -33,7 +33,7 @@ export default function Services({ servicios, whatsapp, config }: Props) {
                         >
                             {serv.imagen_url && (
                                 <div className="w-full h-40 rounded-xl overflow-hidden mb-4">
-                                    <img src={serv.imagen_url} alt={serv.nombre} className="w-full h-full object-cover" />
+                                    <img src={serv.imagen_url} alt={serv.nombre} className="w-full h-full object-cover" loading="lazy" />
                                 </div>
                             )}
                             <h3 className="font-bold text-lg mb-2" style={{ color: colorPrimario }}>

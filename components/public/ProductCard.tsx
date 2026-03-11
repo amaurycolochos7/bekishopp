@@ -1,5 +1,9 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { Producto, Configuracion } from '@/lib/types';
+import { useCart } from './CartContext';
 
 interface Props {
     producto: Producto;
@@ -7,12 +11,24 @@ interface Props {
     config?: Configuracion | null;
 }
 
-export default function ProductCard({ producto, whatsapp, config }: Props) {
+export default function ProductCard({ producto, config }: Props) {
+    const { addItem, openCart } = useCart();
+    const [agregado, setAgregado] = useState(false);
+
     const enStock = producto.stock > 0;
-    const numero = whatsapp.replace(/\D/g, '');
-    const mensaje = encodeURIComponent(`Hola, me interesa: ${producto.nombre} ($${producto.precio})`);
     const colorAccento = config?.color_acento || '#e8a020';
     const colorPrimario = config?.color_primario || '#1a365d';
+
+    const handleAgregar = () => {
+        addItem(producto);
+        setAgregado(true);
+        setTimeout(() => setAgregado(false), 1200);
+        // Abrir carrito brevemente para feedback
+        openCart();
+        setTimeout(() => {
+            // No cerramos automáticamente, dejamos que el usuario lo cierre
+        }, 300);
+    };
 
     return (
         <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all hover:-translate-y-1 group flex flex-col">
@@ -23,6 +39,7 @@ export default function ProductCard({ producto, whatsapp, config }: Props) {
                         src={producto.imagen_url}
                         alt={producto.nombre}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-200">
@@ -40,6 +57,28 @@ export default function ProductCard({ producto, whatsapp, config }: Props) {
                         </span>
                     )}
                 </div>
+
+                {/* Botón rápido agregar al carrito */}
+                {enStock && (
+                    <button
+                        onClick={handleAgregar}
+                        className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${agregado
+                            ? 'bg-green-500 scale-110'
+                            : 'bg-white/90 hover:bg-white opacity-0 group-hover:opacity-100 hover:scale-110'
+                            }`}
+                        title="Agregar al carrito"
+                    >
+                        {agregado ? (
+                            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-4 h-4" style={{ color: colorPrimario }} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                        )}
+                    </button>
+                )}
             </div>
 
             {/* Info */}
@@ -69,18 +108,31 @@ export default function ProductCard({ producto, whatsapp, config }: Props) {
                     >
                         Ver Detalle
                     </Link>
-                    {enStock && numero && (
-                        <a
-                            href={`https://wa.me/${numero}?text=${mensaje}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-center py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1"
+                    {enStock && (
+                        <button
+                            onClick={handleAgregar}
+                            className={`text-center py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 ${agregado
+                                ? 'bg-green-500 text-white scale-[1.02]'
+                                : 'text-white hover:opacity-90'
+                                }`}
+                            style={!agregado ? { backgroundColor: colorAccento } : {}}
                         >
-                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                            </svg>
-                            Comprar
-                        </a>
+                            {agregado ? (
+                                <>
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    ¡Agregado!
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                                    </svg>
+                                    Agregar al Carrito
+                                </>
+                            )}
+                        </button>
                     )}
                 </div>
             </div>
