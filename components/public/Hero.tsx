@@ -31,11 +31,7 @@ export default function Hero({ config }: HeroProps) {
                 <div className={`grid grid-cols-1 ${heroImagen ? 'lg:grid-cols-2' : ''} gap-8 lg:gap-12 items-center`}>
                     {/* Columna de texto */}
                     <div className={heroImagen ? 'order-2 lg:order-1' : 'max-w-2xl mx-auto text-center'}>
-                        {/* Badge */}
-                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/70 backdrop-blur-sm border border-gray-200/50 mb-6">
-                            <span className="text-green-500 text-xs">●</span>
-                            <span className="text-sm font-medium text-gray-600">{badge.replace('● ', '')}</span>
-                        </div>
+
 
                         {/* Título principal */}
                         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-tight mb-4" style={{ color: colorPrimario }}>
