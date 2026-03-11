@@ -1,4 +1,5 @@
 import type { Configuracion } from '@/lib/types';
+import { getMapEmbedUrl } from '@/lib/maps';
 
 interface Props {
     config: Configuracion | null;
@@ -14,6 +15,7 @@ export default function Contact({ config }: Props) {
     const whatsapp = config?.whatsapp_contacto || '';
     const numero = whatsapp.replace(/\D/g, '');
     const horario = config?.horario || {};
+    const mapaEmbedUrl = getMapEmbedUrl(config?.mapa_url || '');
 
     const dias = [
         { key: 'lunes', label: 'Lunes' },
@@ -111,10 +113,10 @@ export default function Contact({ config }: Props) {
                         )}
 
                         {/* Mapa de Google Maps */}
-                        {config?.mapa_url && (
+                        {mapaEmbedUrl && (
                             <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
                                 <iframe
-                                    src={config.mapa_url}
+                                    src={mapaEmbedUrl}
                                     width="100%"
                                     height="250"
                                     style={{ border: 0 }}

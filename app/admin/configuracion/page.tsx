@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { getMapEmbedUrl } from '@/lib/maps';
 
 type Tab = 'general' | 'hero' | 'colores' | 'textos' | 'redes' | 'horario';
 
@@ -400,11 +401,11 @@ export default function ConfiguracionPage() {
                                 <InputField label="Dirección" value={config.direccion} onChange={v => setConfig(p => ({ ...p, direccion: v }))} />
                             </div>
                             <div className="md:col-span-2">
-                                <InputField label="URL de Google Maps (embed)" value={config.mapa_url} onChange={v => setConfig(p => ({ ...p, mapa_url: v }))} placeholder="https://www.google.com/maps/embed?pb=..." />
-                                <p className="text-[10px] text-gray-400 mt-1">Abre Google Maps → Compartir → Insertar un mapa → Copia solo la URL del src del iframe</p>
+                                <InputField label="Ubicación en Google Maps" value={config.mapa_url} onChange={v => setConfig(p => ({ ...p, mapa_url: v }))} placeholder="Pega aquí el link de Google Maps o escribe la dirección" />
+                                <p className="text-[10px] text-gray-400 mt-1">Abre Google Maps → Busca tu negocio → Compartir → Copia el enlace y pégalo aquí</p>
                                 {config.mapa_url && (
                                     <div className="mt-2 rounded-xl overflow-hidden border border-gray-200">
-                                        <iframe src={config.mapa_url} width="100%" height="150" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+                                        <iframe src={getMapEmbedUrl(config.mapa_url)} width="100%" height="150" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
                                     </div>
                                 )}
                             </div>
