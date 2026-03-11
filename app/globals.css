@@ -67,3 +67,39 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #b8953d;
 }
+
+/* ====== Animación de presión en botones ====== */
+button,
+a[class*="rounded"],
+a[class*="btn"] {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:active,
+a[class*="rounded"]:active,
+a[class*="btn"]:active {
+  transform: scale(0.95) !important;
+  transition: transform 0.08s ease;
+}
+
+/* Press animation más suave para botones pequeños (filtros, categorías) */
+button[class*="rounded-full"]:active {
+  transform: scale(0.92) !important;
+}
+
+/* Efecto ripple visual al pulsar */
+@keyframes btn-press {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-press {
+  animation: btn-press 0.2s ease-out;
+}
