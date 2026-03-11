@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Configuracion } from '@/lib/types';
 
 interface HeroProps {
@@ -27,14 +28,15 @@ export default function Hero({ config }: HeroProps) {
                 id="inicio"
                 className="relative overflow-hidden min-h-[500px] md:min-h-[600px] flex items-center"
             >
-                {/* Imagen de fondo con carga prioritaria */}
-                <img
+                {/* Imagen de fondo optimizada con Next.js Image */}
+                <Image
                     src={heroImagen}
                     alt="Hero"
-                    fetchPriority="high"
-                    loading="eager"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover"
+                    fill
+                    priority
+                    quality={75}
+                    sizes="100vw"
+                    className="object-cover"
                     style={{ objectPosition: heroPos }}
                 />
                 {/* Overlay oscuro para legibilidad */}

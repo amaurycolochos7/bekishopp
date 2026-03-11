@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Producto, Configuracion } from '@/lib/types';
 import { useCart } from './CartContext';
 
@@ -35,11 +36,13 @@ export default function ProductCard({ producto, config }: Props) {
             {/* Imagen */}
             <div className="relative aspect-square bg-gray-50 overflow-hidden">
                 {producto.imagen_url ? (
-                    <img
+                    <Image
                         src={producto.imagen_url}
                         alt={producto.nombre}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                        quality={70}
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-200">

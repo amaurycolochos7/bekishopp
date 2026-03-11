@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Servicio, Configuracion } from '@/lib/types';
 
 interface Props {
@@ -32,8 +33,8 @@ export default function Services({ servicios, whatsapp, config }: Props) {
                             className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg transition-all hover:-translate-y-1 border border-transparent hover:border-gray-100 flex flex-col"
                         >
                             {serv.imagen_url && (
-                                <div className="w-full h-40 rounded-xl overflow-hidden mb-4">
-                                    <img src={serv.imagen_url} alt={serv.nombre} className="w-full h-full object-cover" loading="lazy" />
+                                <div className="relative w-full h-40 rounded-xl overflow-hidden mb-4">
+                                    <Image src={serv.imagen_url} alt={serv.nombre} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" quality={70} className="object-cover" />
                                 </div>
                             )}
                             <h3 className="font-bold text-lg mb-2" style={{ color: colorPrimario }}>

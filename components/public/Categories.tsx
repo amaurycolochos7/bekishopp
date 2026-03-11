@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { Categoria, Configuracion } from '@/lib/types';
 
 interface Props {
@@ -33,8 +34,8 @@ export default function Categories({ categorias, config }: Props) {
                             className="group bg-gray-50 hover:bg-white rounded-2xl p-5 text-center transition-all hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-100"
                         >
                             {cat.imagen_url ? (
-                                <div className="w-16 h-16 mx-auto mb-3 rounded-xl overflow-hidden">
-                                    <img src={cat.imagen_url} alt={cat.nombre} className="w-full h-full object-cover" loading="lazy" />
+                                <div className="relative w-16 h-16 mx-auto mb-3 rounded-xl overflow-hidden">
+                                    <Image src={cat.imagen_url} alt={cat.nombre} fill sizes="64px" quality={60} className="object-cover" />
                                 </div>
                             ) : (
                                 <div
