@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { Configuracion } from '@/lib/types';
 import { useCart } from './CartContext';
 
@@ -74,7 +75,7 @@ export default function Header({ config }: HeaderProps) {
                         {/* Logo centrado */}
                         <Link href="/" className="flex flex-col items-center gap-1 group">
                             {logoUrl ? (
-                                <img src={logoUrl} alt={nombreNegocio} width={72} height={72} className="rounded-full bg-white p-0.5 object-cover" />
+                                <Image src={logoUrl} alt={nombreNegocio} width={72} height={72} priority className="rounded-full bg-white p-0.5 object-cover w-[72px] h-[72px]" />
                             ) : (
                                 <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-white" style={{ backgroundColor: colorAccento }}>
                                     <svg className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>

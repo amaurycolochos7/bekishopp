@@ -35,7 +35,7 @@ export default function Categories({ categorias, config }: Props) {
                         >
                             {cat.imagen_url ? (
                                 <div className="relative w-16 h-16 mx-auto mb-3 rounded-xl overflow-hidden">
-                                    <Image src={cat.imagen_url} alt={cat.nombre} fill sizes="64px" quality={60} className="object-cover" />
+                                    <Image src={cat.imagen_url} alt={cat.nombre} fill sizes="64px" quality={60} priority className="object-cover" />
                                 </div>
                             ) : (
                                 <div
