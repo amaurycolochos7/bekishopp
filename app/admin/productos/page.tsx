@@ -606,7 +606,7 @@ export default function AdminProductos() {
                                     value={precioDescuento}
                                     onChange={(e) => setPrecioDescuento(e.target.value)}
                                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm"
-                                    placeholder="Dejar vacío si no hay descuento"
+                                    placeholder=""
                                 />
                                 {precio && precioDescuento && parseFloat(precioDescuento) < parseFloat(precio) && (
                                     <p className="text-xs text-red-500 mt-1 font-medium flex items-center gap-1">

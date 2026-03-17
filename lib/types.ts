@@ -73,7 +73,9 @@ export interface Configuracion {
   hero_carrusel_imagenes: string[];
   hero_badge: string;
   hero_boton_texto: string;
+  hero_boton_link: string;
   hero_boton_secundario_texto: string;
+  hero_boton_secundario_link: string;
 
   // Estadísticas Hero
   stats: { valor: string; etiqueta: string }[];

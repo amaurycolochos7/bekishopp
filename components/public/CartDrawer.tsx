@@ -12,7 +12,7 @@ interface CartDrawerProps {
 export default function CartDrawer({ whatsapp, colorPrimario = '#1a365d', colorAccento = '#e8a020' }: CartDrawerProps) {
     const { state, removeItem, updateQuantity, clearCart, closeCart, totalItems, totalPrecio } = useCart();
     const [nombreCliente, setNombreCliente] = useState('');
-    const [mostrarError, setMostrarError] = useState(false);
+
 
     const numero = whatsapp.replace(/\D/g, '');
 
@@ -21,7 +21,10 @@ export default function CartDrawer({ whatsapp, colorPrimario = '#1a365d', colorA
         if (state.items.length === 0) return '';
 
         let msg = `*Pedido desde Beky Store*\n`;
-        msg += `*Cliente:* ${nombreCliente.trim()}\n\n`;
+        if (nombreCliente.trim()) {
+            msg += `*Cliente:* ${nombreCliente.trim()}\n`;
+        }
+        msg += `\n`;
         state.items.forEach((item, idx) => {
             msg += `${idx + 1}. *${item.producto.nombre.trim()}*\n`;
             msg += `   Cantidad: ${item.cantidad}\n`;
@@ -38,11 +41,6 @@ export default function CartDrawer({ whatsapp, colorPrimario = '#1a365d', colorA
     };
 
     const handleComprar = () => {
-        if (!nombreCliente.trim()) {
-            setMostrarError(true);
-            return;
-        }
-        setMostrarError(false);
         const msg = generarMensajeWA();
         if (msg && numero) {
             window.open(`https://wa.me/${numero}?text=${msg}`, '_blank');
@@ -154,21 +152,11 @@ export default function CartDrawer({ whatsapp, colorPrimario = '#1a365d', colorA
                         <div>
                             <input
                                 type="text"
-                                placeholder="Escribe tu nombre"
+                                placeholder="Tu nombre (opcional)"
                                 value={nombreCliente}
-                                onChange={(e) => {
-                                    setNombreCliente(e.target.value);
-                                    if (e.target.value.trim()) setMostrarError(false);
-                                }}
-                                className={`w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors ${
-                                    mostrarError
-                                        ? 'border-red-400 bg-red-50 focus:border-red-500'
-                                        : 'border-gray-200 bg-white focus:border-gray-400'
-                                }`}
+                                onChange={(e) => setNombreCliente(e.target.value)}
+                                className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm outline-none transition-colors focus:border-gray-400"
                             />
-                            {mostrarError && (
-                                <p className="text-xs text-red-500 mt-1">Por favor ingresa tu nombre para continuar</p>
-                            )}
                         </div>
 
                         {/* Total */}

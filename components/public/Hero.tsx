@@ -11,8 +11,10 @@ interface HeroProps {
 export default function Hero({ config }: HeroProps) {
     const titulo = config?.hero_titulo || 'Tu Selección de Calidad.';
     const subtitulo = config?.hero_subtitulo || 'Productos y Servicios de Origen Familiar.';
-    const botonTexto = config?.hero_boton_texto || 'Explorar Catálogo';
-    const botonSecundario = config?.hero_boton_secundario_texto || 'Contáctanos';
+    const botonTexto = 'Ver productos';
+    const botonLink = config?.hero_boton_link || '/catalogo';
+    const botonSecundario = 'Nuestros servicios';
+    const botonSecundarioLink = config?.hero_boton_secundario_link || '/servicios';
     const colorPrimario = config?.color_primario || '#1a365d';
     const colorAccento = config?.color_acento || '#e8a020';
     const colorFondo = config?.color_fondo || '#faf5eb';
@@ -109,7 +111,7 @@ export default function Hero({ config }: HeroProps) {
                         {/* Botones */}
                         <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
                             <a
-                                href="/catalogo"
+                                href={botonLink}
                                 className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                                 style={{ backgroundColor: colorAccento }}
                             >
@@ -119,7 +121,7 @@ export default function Hero({ config }: HeroProps) {
                                 </svg>
                             </a>
                             <a
-                                href="/contacto"
+                                href={botonSecundarioLink}
                                 className="inline-flex items-center px-6 py-3.5 rounded-full font-semibold text-sm border-2 transition-all hover:-translate-y-0.5 text-white border-white/60 hover:bg-white/10"
                             >
                                 {botonSecundario}
@@ -196,7 +198,7 @@ export default function Hero({ config }: HeroProps) {
                     {/* Botones */}
                     <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
                         <a
-                            href="/catalogo"
+                            href={botonLink}
                             className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-white font-semibold text-sm shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
                             style={{ backgroundColor: colorAccento }}
                         >
@@ -206,7 +208,7 @@ export default function Hero({ config }: HeroProps) {
                             </svg>
                         </a>
                         <a
-                            href="/contacto"
+                            href={botonSecundarioLink}
                             className="inline-flex items-center px-6 py-3.5 rounded-full font-semibold text-sm border-2 transition-all hover:-translate-y-0.5"
                             style={{ borderColor: colorPrimario, color: colorPrimario }}
                         >

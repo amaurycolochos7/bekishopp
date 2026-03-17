@@ -30,7 +30,7 @@ export default function Categories({ categorias, config }: Props) {
                     {categorias.map((cat, i) => (
                         <a
                             key={cat.id}
-                            href={`/?categoria=${cat.id}#catalogo`}
+                            href={`/catalogo?categoria=${cat.id}`}
                             className="group bg-gray-50 hover:bg-white rounded-2xl p-5 text-center transition-all hover:shadow-lg hover:-translate-y-1 border border-transparent hover:border-gray-100"
                         >
                             {cat.imagen_url ? (
