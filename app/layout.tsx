@@ -3,12 +3,18 @@ import "./globals.css";
 import { CartProvider } from "@/components/public/CartContext";
 import { createClient } from "@/lib/supabase/server";
 
-// URL pública del sitio (necesaria para que WhatsApp/Facebook/Twitter resuelvan
-// correctamente las URLs absolutas de las tags Open Graph). En local cae a
-// localhost; en Vercel usa la variable de entorno del deployment.
+// URL canónica del sitio. Es CRÍTICO que sea la URL de producción del dominio
+// personalizado y NO la URL efímera del deployment de Vercel (ej. *.vercel.app),
+// porque WhatsApp/Facebook cachean el preview por og:url.
+// - NEXT_PUBLIC_SITE_URL: override manual (recomendado en Vercel)
+// - VERCEL_PROJECT_PRODUCTION_URL: dominio de producción del proyecto
+//   (distinto a VERCEL_URL que siempre es el deployment específico)
+// - Fallback: dominio conocido del negocio
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://bekystore.shop');
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'https://www.bekystore.shop');
 
 export async function generateMetadata(): Promise<Metadata> {
   let title = "Catálogo de Productos y Servicios";
