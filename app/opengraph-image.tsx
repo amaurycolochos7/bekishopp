@@ -1,18 +1,22 @@
 import { ImageResponse } from 'next/og';
-import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Convención de archivo de Next.js: este archivo genera la imagen Open Graph
+// servida automáticamente en /opengraph-image. Next.js inyecta el meta tag
+// <meta property="og:image"> apuntando a una URL limpia (sin query params)
+// con un hash de versión — formato que scrapers como WhatsApp/Facebook/iMessage
+// procesan de manera más confiable que un endpoint custom.
+
 export const runtime = 'edge';
+export const revalidate = 3600;
+export const alt = 'Catálogo';
+export const size = { width: 1200, height: 630 };
+export const contentType = 'image/png';
 
-// Genera la imagen Open Graph (1200x630 PNG) usada en previews de
-// WhatsApp / Facebook / Twitter / iMessage, etc.
-// Acepta ?logo=<url> como override; si no, lee la configuración de Supabase.
-export async function GET(request: NextRequest) {
-    const logoParam = request.nextUrl.searchParams.get('logo');
-
-    let logoUrl: string | null = logoParam;
+export default async function Image() {
     let titulo = 'Catálogo';
     let subtitulo = '';
+    let logoUrl: string | null = null;
     let colorPrimario = '#1a365d';
     let colorSecundario = '#c9a84c';
     let colorFondo = '#faf5eb';
@@ -31,13 +35,13 @@ export async function GET(request: NextRequest) {
         if (data) {
             titulo = data.nombre_negocio || titulo;
             subtitulo = data.slogan || subtitulo;
-            if (!logoUrl) logoUrl = data.logo_url;
+            logoUrl = data.logo_url;
             colorPrimario = data.color_primario || colorPrimario;
             colorSecundario = data.color_secundario || colorSecundario;
             colorFondo = data.color_fondo || colorFondo;
         }
     } catch {
-        // Seguir con valores por defecto
+        // Usar valores por defecto
     }
 
     return new ImageResponse(
@@ -60,9 +64,9 @@ export async function GET(request: NextRequest) {
                     <div
                         style={{
                             display: 'flex',
-                            width: 260,
-                            height: 260,
-                            borderRadius: 130,
+                            width: 280,
+                            height: 280,
+                            borderRadius: 140,
                             backgroundColor: '#fff',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -75,15 +79,15 @@ export async function GET(request: NextRequest) {
                         <img
                             src={logoUrl}
                             alt={titulo}
-                            width={220}
-                            height={220}
+                            width={240}
+                            height={240}
                             style={{ objectFit: 'contain' }}
                         />
                     </div>
                 )}
                 <div
                     style={{
-                        fontSize: 72,
+                        fontSize: 76,
                         fontWeight: 800,
                         color: colorPrimario,
                         textAlign: 'center',
@@ -100,7 +104,7 @@ export async function GET(request: NextRequest) {
                             color: colorPrimario,
                             opacity: 0.7,
                             textAlign: 'center',
-                            marginTop: 20,
+                            marginTop: 24,
                             maxWidth: 900,
                         }}
                     >
@@ -109,12 +113,6 @@ export async function GET(request: NextRequest) {
                 )}
             </div>
         ),
-        {
-            width: 1200,
-            height: 630,
-            headers: {
-                'Cache-Control': 'public, max-age=3600, s-maxage=86400',
-            },
-        }
+        { ...size }
     );
 }

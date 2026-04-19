@@ -38,11 +38,9 @@ export async function generateMetadata(): Promise<Metadata> {
     // Usar valores por defecto si falla
   }
 
-  // Imagen para el preview de WhatsApp/Facebook/Twitter.
-  // Preferimos el endpoint /api/og que genera una imagen PNG 1200x630
-  // a partir del logo — formato ideal para redes sociales y garantizado
-  // compatible (WhatsApp no soporta SVG ni imágenes muy pequeñas).
-  const ogImageUrl = `${SITE_URL}/api/og${logoUrl ? `?logo=${encodeURIComponent(logoUrl)}` : ''}`;
+  // NOTA: og:image y twitter:image los maneja Next.js automáticamente vía
+  // la convención de archivo app/opengraph-image.tsx (URL limpia, versionada,
+  // mejor compatibilidad con scrapers de WhatsApp/Facebook/iMessage).
 
   const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -55,21 +53,11 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: title,
       url: SITE_URL,
-      images: [
-        {
-          url: ogImageUrl,
-          width: 1200,
-          height: 630,
-          alt: title,
-          type: 'image/png',
-        },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: [ogImageUrl],
     },
     ...(logoUrl && {
       icons: {

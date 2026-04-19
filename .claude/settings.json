@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(git rebase *)",
+      "Bash(git commit -m ' *)",
+      "Bash(curl -sL -A \"WhatsApp/2.23.0\" https://bekystore.shop)",
+      "Bash(curl -sI \"https://bekystore.shop/api/og\")",
+      "Bash(curl -sIL \"https://bekystore.shop/api/og\")",
+      "Bash(curl -sL -A \"WhatsApp/2.23.0\" https://www.bekystore.shop)",
+      "Bash(curl -sIL \"https://www.bekystore.shop/api/og?logo=https%3A%2F%2Filxzuicxfkluijsnqmia.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fconfiguracion%2Flogo_1773159387154.png\")",
+      "Bash(curl -sL \"https://www.bekystore.shop/api/og?logo=https%3A%2F%2Filxzuicxfkluijsnqmia.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fconfiguracion%2Flogo_1773159387154.png\" -o /tmp/og.png)",
+      "Bash(curl -sL -A \"facebookexternalhit/1.1\" https://bekystore.shop)",
+      "Bash(curl -sI \"https://bekystore.shop\")",
+      "Bash(curl -sL -A \"facebookexternalhit/1.1\" https://bekystore.shop/ -o /tmp/page.html -w \"HTTP:%{http_code}\\\\nSize:%{size_download}\\\\nRedirects:%{num_redirects}\\\\nURL Final:%{url_effective}\\\\n\")"
+    ]
+  }
+}
