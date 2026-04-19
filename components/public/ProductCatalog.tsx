@@ -13,10 +13,19 @@ interface Props {
     servicios?: Servicio[];
 }
 
+const PRODUCTOS_INICIAL = 4;
+
 export default function ProductCatalog({ productos, categorias, whatsapp, config, servicios = [] }: Props) {
     const [filtro, setFiltro] = useState('todos');
     const [busqueda, setBusqueda] = useState('');
+    const [orden, setOrden] = useState<'' | 'precio-asc' | 'precio-desc'>('');
+    const [mostrarTodos, setMostrarTodos] = useState(false);
     const searchParams = useSearchParams();
+
+    // Al cambiar filtros/búsqueda/orden, volvemos a mostrar solo los primeros N
+    useEffect(() => {
+        setMostrarTodos(false);
+    }, [filtro, busqueda, orden]);
 
     const titulo = config?.texto_catalogo_titulo || 'Nuestro Catálogo Destacado';
     const subtitulo = config?.texto_catalogo_subtitulo || 'Los mejores productos para ti';
@@ -36,6 +45,10 @@ export default function ProductCatalog({ productos, categorias, whatsapp, config
         }
     }, [searchParams]);
 
+    // Precio efectivo (considera descuento) para ordenar correctamente
+    const precioEfectivo = (p: Producto) =>
+        p.precio_descuento != null ? p.precio_descuento : p.precio;
+
     // Filtrar por categoría (pivote muchos-a-muchos) y búsqueda.
     // Un producto aparece en la categoría si es su categoría principal o
     // está presente en producto.categorias[] (tabla pivote).
@@ -52,6 +65,11 @@ export default function ProductCatalog({ productos, categorias, whatsapp, config
                 p.nombre.toLowerCase().includes(term) ||
                 (p.descripcion && p.descripcion.toLowerCase().includes(term))
             );
+        })
+        .sort((a, b) => {
+            if (orden === 'precio-asc') return precioEfectivo(a) - precioEfectivo(b);
+            if (orden === 'precio-desc') return precioEfectivo(b) - precioEfectivo(a);
+            return 0;
         });
 
     // Filtrar servicios por búsqueda
@@ -104,46 +122,95 @@ export default function ProductCatalog({ productos, categorias, whatsapp, config
                     </div>
                 </div>
 
-                {/* Filtros por categoría */}
-                <div className="flex flex-wrap justify-center gap-2 mb-10">
-                    <button
-                        onClick={() => setFiltro('todos')}
-                        className="px-5 py-2 rounded-full text-sm font-medium transition-all"
-                        style={filtro === 'todos'
-                            ? { backgroundColor: colorPrimario, color: '#fff' }
-                            : { backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #e5e7eb' }
-                        }
-                    >
-                        Todos
-                    </button>
-                    {categorias.map((cat) => (
-                        <button
-                            key={cat.id}
-                            onClick={() => setFiltro(cat.id)}
-                            className="px-5 py-2 rounded-full text-sm font-medium transition-all"
-                            style={filtro === cat.id
-                                ? { backgroundColor: colorPrimario, color: '#fff' }
-                                : { backgroundColor: 'transparent', color: '#6b7280', border: '1px solid #e5e7eb' }
-                            }
+                {/* Filtros: categoría + orden por precio — selects estilo pill */}
+                <div className="flex flex-col sm:flex-row gap-3 mb-10 max-w-2xl mx-auto">
+                    {/* Select de categoría */}
+                    <div className="relative flex-1">
+                        <select
+                            value={filtro}
+                            onChange={(e) => setFiltro(e.target.value)}
+                            className="w-full appearance-none pl-5 pr-12 py-3 rounded-full bg-white border border-gray-200 text-sm font-medium cursor-pointer outline-none focus:border-gray-300 transition-colors"
+                            style={{ color: filtro === 'todos' ? '#374151' : colorPrimario }}
                         >
-                            {cat.nombre}
-                        </button>
-                    ))}
+                            <option value="todos">Todas las categorías</option>
+                            {categorias.map((cat) => (
+                                <option key={cat.id} value={cat.id}>{cat.nombre}</option>
+                            ))}
+                        </select>
+                        <svg
+                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                        </svg>
+                    </div>
+
+                    {/* Select de orden por precio */}
+                    <div className="relative flex-1">
+                        <select
+                            value={orden}
+                            onChange={(e) => setOrden(e.target.value as '' | 'precio-asc' | 'precio-desc')}
+                            className="w-full appearance-none pl-5 pr-12 py-3 rounded-full bg-white border border-gray-200 text-sm font-medium cursor-pointer outline-none focus:border-gray-300 transition-colors"
+                            style={{ color: orden === '' ? '#374151' : colorPrimario }}
+                        >
+                            <option value="">Ordenar por precio</option>
+                            <option value="precio-asc">Menor a mayor</option>
+                            <option value="precio-desc">Mayor a menor</option>
+                        </select>
+                        <svg
+                            className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                            fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                        </svg>
+                    </div>
                 </div>
 
-                {/* Grid de productos */}
-                {productosFiltrados.length > 0 && (
-                    <>
-                        {busqueda.trim() && serviciosFiltrados.length > 0 && (
-                            <h3 className="text-lg font-bold mb-4" style={{ color: colorPrimario }}>Productos</h3>
-                        )}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
-                            {productosFiltrados.map((producto) => (
-                                <ProductCard key={producto.id} producto={producto} whatsapp={whatsapp} config={config} />
-                            ))}
-                        </div>
-                    </>
-                )}
+                {/* Grid de productos (muestra solo PRODUCTOS_INICIAL al inicio) */}
+                {productosFiltrados.length > 0 && (() => {
+                    const hayMas = productosFiltrados.length > PRODUCTOS_INICIAL;
+                    const productosVisibles = mostrarTodos
+                        ? productosFiltrados
+                        : productosFiltrados.slice(0, PRODUCTOS_INICIAL);
+                    return (
+                        <>
+                            {busqueda.trim() && serviciosFiltrados.length > 0 && (
+                                <h3 className="text-lg font-bold mb-4" style={{ color: colorPrimario }}>Productos</h3>
+                            )}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+                                {productosVisibles.map((producto) => (
+                                    <ProductCard key={producto.id} producto={producto} whatsapp={whatsapp} config={config} />
+                                ))}
+                            </div>
+
+                            {hayMas && (
+                                <div className="flex justify-center mt-8">
+                                    <button
+                                        onClick={() => setMostrarTodos((v) => !v)}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-white border transition-all hover:shadow-md"
+                                        style={{
+                                            color: colorPrimario,
+                                            borderColor: `${colorPrimario}33`,
+                                        }}
+                                    >
+                                        {mostrarTodos
+                                            ? 'Ver menos'
+                                            : `Ver todos (${productosFiltrados.length})`}
+                                        <svg
+                                            className={`w-4 h-4 transition-transform ${mostrarTodos ? 'rotate-180' : ''}`}
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth={2}
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    );
+                })()}
 
                 {/* Servicios encontrados en la búsqueda */}
                 {serviciosFiltrados.length > 0 && (

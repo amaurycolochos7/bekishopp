@@ -334,10 +334,11 @@ export default function ConfiguracionPage() {
         setSubiendo(false);
     }
 
-    async function subirImagenCarrusel(file: File, indice: number) {
+    // Sube una imagen al carrusel. Si indice === null la añade al final.
+    async function subirImagenCarrusel(file: File, indice: number | null) {
         setSubiendoHero(true);
         const ext = file.name.split('.').pop();
-        const nombre = `carrusel_${indice}_${Date.now()}.${ext}`;
+        const nombre = `carrusel_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
         const { error } = await supabase.storage.from('configuracion').upload(nombre, file, { upsert: true });
         if (error) {
             setMensaje(`Error subiendo imagen: ${error.message}`);
@@ -347,7 +348,11 @@ export default function ConfiguracionPage() {
         const { data: urlData } = supabase.storage.from('configuracion').getPublicUrl(nombre);
         setConfig(prev => {
             const imgs = [...(prev.hero_carrusel_imagenes || [])];
-            imgs[indice] = urlData.publicUrl;
+            if (indice === null) {
+                imgs.push(urlData.publicUrl);
+            } else {
+                imgs[indice] = urlData.publicUrl;
+            }
             return { ...prev, hero_carrusel_imagenes: imgs };
         });
         setSubiendoHero(false);
@@ -568,44 +573,88 @@ export default function ConfiguracionPage() {
                                 )}
                             </div>
                         </div>
-                        {/* Sección Carrusel de imágenes */}
+                        {/* Sección Carrusel de imágenes — cantidad dinámica */}
                         <div>
-                            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Carrusel de Imágenes (hasta 3)</label>
-                            <p className="text-[10px] text-gray-400 mb-3">Sube hasta 3 imágenes que rotarán automáticamente en el fondo del Hero. Si no subes ninguna, se usará la imagen del Hero de arriba.</p>
-                            <div className="grid grid-cols-3 gap-3">
-                                {[0, 1, 2].map(i => {
-                                    const imgUrl = config.hero_carrusel_imagenes?.[i];
-                                    return (
-                                        <div key={i} className="flex flex-col items-center gap-1.5">
-                                            <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center">
-                                                {imgUrl ? (
-                                                    <img src={imgUrl} alt={`Carrusel ${i + 1}`} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    <div className="text-center">
-                                                        <svg className="w-6 h-6 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                        <span className="text-[9px] text-gray-400 mt-0.5 block">Foto {i + 1}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex gap-1">
-                                                <label className="cursor-pointer px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-[10px] font-medium text-gray-700 transition-colors">
-                                                    {subiendoHero ? '...' : 'Subir'}
-                                                    <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && subirImagenCarrusel(e.target.files[0], i)} />
-                                                </label>
-                                                {imgUrl && (
+                            <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                Carrusel de Imágenes
+                                <span className="ml-1 font-normal text-gray-400">
+                                    ({config.hero_carrusel_imagenes?.length || 0} {(config.hero_carrusel_imagenes?.length || 0) === 1 ? 'foto' : 'fotos'})
+                                </span>
+                            </label>
+                            <p className="text-[10px] text-gray-400 mb-3">
+                                Las imágenes rotan automáticamente en el fondo del Hero cada 5 segundos. Puedes navegar manualmente con las flechas. Sube todas las que quieras.
+                            </p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {(config.hero_carrusel_imagenes || []).map((imgUrl, i) => (
+                                    <div key={`${imgUrl}-${i}`} className="flex flex-col items-center gap-1.5">
+                                        <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 group">
+                                            <img src={imgUrl} alt={`Carrusel ${i + 1}`} className="w-full h-full object-cover" />
+                                            <span className="absolute top-1 left-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-full font-semibold">#{i + 1}</span>
+                                            {/* Controles reorder */}
+                                            <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {i > 0 && (
                                                     <button
                                                         onClick={() => setConfig(p => {
                                                             const imgs = [...(p.hero_carrusel_imagenes || [])];
-                                                            imgs.splice(i, 1);
+                                                            [imgs[i - 1], imgs[i]] = [imgs[i], imgs[i - 1]];
                                                             return { ...p, hero_carrusel_imagenes: imgs };
                                                         })}
-                                                        className="text-red-400 hover:text-red-600 text-[10px]"
-                                                    >Quitar</button>
+                                                        className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow text-gray-700 hover:text-amber-600"
+                                                        title="Mover antes"
+                                                    >
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                                {i < (config.hero_carrusel_imagenes?.length || 0) - 1 && (
+                                                    <button
+                                                        onClick={() => setConfig(p => {
+                                                            const imgs = [...(p.hero_carrusel_imagenes || [])];
+                                                            [imgs[i + 1], imgs[i]] = [imgs[i], imgs[i + 1]];
+                                                            return { ...p, hero_carrusel_imagenes: imgs };
+                                                        })}
+                                                        className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow text-gray-700 hover:text-amber-600"
+                                                        title="Mover después"
+                                                    >
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                                        </svg>
+                                                    </button>
                                                 )}
                                             </div>
                                         </div>
-                                    );
-                                })}
+                                        <div className="flex gap-1">
+                                            <label className="cursor-pointer px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-lg text-[10px] font-medium text-gray-700 transition-colors">
+                                                {subiendoHero ? '...' : 'Reemplazar'}
+                                                <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && subirImagenCarrusel(e.target.files[0], i)} />
+                                            </label>
+                                            <button
+                                                onClick={() => setConfig(p => {
+                                                    const imgs = [...(p.hero_carrusel_imagenes || [])];
+                                                    imgs.splice(i, 1);
+                                                    return { ...p, hero_carrusel_imagenes: imgs };
+                                                })}
+                                                className="text-red-400 hover:text-red-600 text-[10px]"
+                                            >Quitar</button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {/* Slot para agregar una nueva imagen */}
+                                <label className="flex flex-col items-center gap-1.5 cursor-pointer">
+                                    <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border-2 border-dashed border-gray-300 bg-gray-50 hover:border-amber-400 hover:bg-amber-50 flex items-center justify-center transition-colors">
+                                        <div className="text-center">
+                                            <svg className="w-7 h-7 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 4v16m8-8H4" />
+                                            </svg>
+                                            <span className="text-[10px] text-gray-500 mt-1 block font-medium">
+                                                {subiendoHero ? 'Subiendo...' : 'Agregar foto'}
+                                            </span>
+                                        </div>
+                                        <input type="file" accept="image/*" className="hidden" onChange={e => e.target.files?.[0] && subirImagenCarrusel(e.target.files[0], null)} />
+                                    </div>
+                                    <span className="text-[10px] text-gray-400">Nueva</span>
+                                </label>
                             </div>
                         </div>
                         <div>

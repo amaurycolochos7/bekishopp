@@ -50,6 +50,15 @@ html {
   animation: cart-badge-pop 0.3s ease-out;
 }
 
+/* Ocultar scrollbar en filas con scroll horizontal (chips, carruseles) */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Scrollbar personalizada */
 ::-webkit-scrollbar {
   width: 8px;

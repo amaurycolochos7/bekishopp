@@ -39,26 +39,29 @@ export default function Hero({ config }: HeroProps) {
     const [indiceActual, setIndiceActual] = useState(0);
     const [indiceSiguiente, setIndiceSiguiente] = useState(1);
     const [transitioning, setTransitioning] = useState(false);
+    const [autoplay, setAutoplay] = useState(true);
 
-    const avanzar = useCallback(() => {
-        if (!esCarrusel) return;
+    const irA = useCallback((destino: number) => {
+        if (!esCarrusel || transitioning) return;
+        const idx = ((destino % carruselImagenes.length) + carruselImagenes.length) % carruselImagenes.length;
+        if (idx === indiceActual) return;
+        setIndiceSiguiente(idx);
         setTransitioning(true);
-        // Después de la transición de fade, actualizamos el índice
         setTimeout(() => {
-            setIndiceActual(prev => {
-                const nuevo = (prev + 1) % carruselImagenes.length;
-                setIndiceSiguiente((nuevo + 1) % carruselImagenes.length);
-                return nuevo;
-            });
+            setIndiceActual(idx);
+            setIndiceSiguiente((idx + 1) % carruselImagenes.length);
             setTransitioning(false);
-        }, 1000); // Duración del crossfade
-    }, [esCarrusel, carruselImagenes.length]);
+        }, 1000);
+    }, [esCarrusel, carruselImagenes.length, transitioning, indiceActual]);
+
+    const avanzar = useCallback(() => irA(indiceActual + 1), [irA, indiceActual]);
+    const retroceder = useCallback(() => irA(indiceActual - 1), [irA, indiceActual]);
 
     useEffect(() => {
-        if (!esCarrusel) return;
-        const intervalo = setInterval(avanzar, 5000); // Cambiar cada 5 segundos
+        if (!esCarrusel || !autoplay) return;
+        const intervalo = setInterval(() => avanzar(), 5000);
         return () => clearInterval(intervalo);
-    }, [esCarrusel, avanzar]);
+    }, [esCarrusel, autoplay, avanzar]);
 
     // Si hay imagen(es), usar como background con overlay (con carrusel)
     if (tieneImagenes) {
@@ -66,6 +69,8 @@ export default function Hero({ config }: HeroProps) {
             <section
                 id="inicio"
                 className="relative overflow-hidden min-h-[500px] md:min-h-[600px] flex items-center"
+                onMouseEnter={() => setAutoplay(false)}
+                onMouseLeave={() => setAutoplay(true)}
             >
                 {/* --- Imágenes del Carrusel --- */}
                 {carruselImagenes.map((img, i) => (
@@ -88,6 +93,32 @@ export default function Hero({ config }: HeroProps) {
                         }}
                     />
                 ))}
+
+                {/* Flechas de navegación manual (solo si hay carrusel) */}
+                {esCarrusel && (
+                    <>
+                        <button
+                            onClick={retroceder}
+                            aria-label="Imagen anterior"
+                            className="absolute left-3 md:left-5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center justify-center transition-all hover:scale-110"
+                            style={{ zIndex: 5 }}
+                        >
+                            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={avanzar}
+                            aria-label="Imagen siguiente"
+                            className="absolute right-3 md:right-5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm text-white flex items-center justify-center transition-all hover:scale-110"
+                            style={{ zIndex: 5 }}
+                        >
+                            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </>
+                )}
 
                 {/* Overlay oscuro para legibilidad */}
                 <div className="absolute inset-0 bg-black/50" style={{ zIndex: 2 }} />
@@ -140,35 +171,30 @@ export default function Hero({ config }: HeroProps) {
                             ))}
                         </div>
 
-                        {/* Indicadores del carrusel */}
-                        {esCarrusel && (
-                            <div className="flex items-center justify-center gap-2 mt-8">
-                                {carruselImagenes.map((_, i) => (
-                                    <button
-                                        key={i}
-                                        onClick={() => {
-                                            if (i === indiceActual || transitioning) return;
-                                            setIndiceSiguiente(i);
-                                            setTransitioning(true);
-                                            setTimeout(() => {
-                                                setIndiceActual(i);
-                                                setIndiceSiguiente((i + 1) % carruselImagenes.length);
-                                                setTransitioning(false);
-                                            }, 1000);
-                                        }}
-                                        className="transition-all duration-300 rounded-full"
-                                        style={{
-                                            width: i === indiceActual ? '2rem' : '0.5rem',
-                                            height: '0.5rem',
-                                            backgroundColor: i === indiceActual ? colorAccento : 'rgba(255,255,255,0.5)',
-                                        }}
-                                        aria-label={`Ir a imagen ${i + 1}`}
-                                    />
-                                ))}
-                            </div>
-                        )}
                     </div>
                 </div>
+
+                {/* Indicadores del carrusel (reposicionados al borde inferior del hero) */}
+                {esCarrusel && (
+                    <div
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 backdrop-blur-sm"
+                        style={{ zIndex: 5 }}
+                    >
+                        {carruselImagenes.map((_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => irA(i)}
+                                className="transition-all duration-300 rounded-full"
+                                style={{
+                                    width: i === indiceActual ? '2rem' : '0.5rem',
+                                    height: '0.5rem',
+                                    backgroundColor: i === indiceActual ? colorAccento : 'rgba(255,255,255,0.6)',
+                                }}
+                                aria-label={`Ir a imagen ${i + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
             </section>
         );
     }
