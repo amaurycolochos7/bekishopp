@@ -3,6 +3,13 @@ import "./globals.css";
 import { CartProvider } from "@/components/public/CartContext";
 import { createClient } from "@/lib/supabase/server";
 
+// URL pública del sitio (necesaria para que WhatsApp/Facebook/Twitter resuelvan
+// correctamente las URLs absolutas de las tags Open Graph). En local cae a
+// localhost; en Vercel usa la variable de entorno del deployment.
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://bekystore.shop');
+
 export async function generateMetadata(): Promise<Metadata> {
   let title = "Catálogo de Productos y Servicios";
   let description = "Explora nuestro catálogo de productos y servicios de calidad. Contacta directamente por WhatsApp para realizar tus compras.";
@@ -25,7 +32,14 @@ export async function generateMetadata(): Promise<Metadata> {
     // Usar valores por defecto si falla
   }
 
+  // Imagen para el preview de WhatsApp/Facebook/Twitter.
+  // Preferimos el endpoint /api/og que genera una imagen PNG 1200x630
+  // a partir del logo — formato ideal para redes sociales y garantizado
+  // compatible (WhatsApp no soporta SVG ni imágenes muy pequeñas).
+  const ogImageUrl = `${SITE_URL}/api/og${logoUrl ? `?logo=${encodeURIComponent(logoUrl)}` : ''}`;
+
   const metadata: Metadata = {
+    metadataBase: new URL(SITE_URL),
     title,
     description,
     keywords: "catálogo, productos, servicios, WhatsApp, comprar",
@@ -34,24 +48,22 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       type: "website",
       siteName: title,
-      ...(logoUrl && {
-        images: [
-          {
-            url: logoUrl,
-            width: 512,
-            height: 512,
-            alt: title,
-          },
-        ],
-      }),
+      url: SITE_URL,
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+          type: 'image/png',
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
-      ...(logoUrl && {
-        images: [logoUrl],
-      }),
+      images: [ogImageUrl],
     },
     ...(logoUrl && {
       icons: {
