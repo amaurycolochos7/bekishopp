@@ -38,9 +38,14 @@ export async function generateMetadata(): Promise<Metadata> {
     // Usar valores por defecto si falla
   }
 
-  // NOTA: og:image y twitter:image los maneja Next.js automáticamente vía
-  // la convención de archivo app/opengraph-image.tsx (URL limpia, versionada,
-  // mejor compatibilidad con scrapers de WhatsApp/Facebook/iMessage).
+  // Para el preview en WhatsApp/Facebook/iMessage necesitamos que la imagen
+  // sea ≤ ~500KB. El logo original en Supabase suele ser gigantesco (varios MB,
+  // miles de píxeles) y WhatsApp lo rechaza por tamaño → no muestra preview.
+  // Solución: pasar el logo por /_next/image que redimensiona y optimiza
+  // automáticamente (sale PNG de ~50-100KB a 1200px).
+  const ogImageUrl = logoUrl
+    ? `${SITE_URL}/_next/image?url=${encodeURIComponent(logoUrl)}&w=1200&q=75`
+    : null;
 
   const metadata: Metadata = {
     metadataBase: new URL(SITE_URL),
@@ -53,16 +58,22 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       siteName: title,
       url: SITE_URL,
+      ...(ogImageUrl && {
+        images: [{ url: ogImageUrl, alt: title }],
+      }),
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      ...(ogImageUrl && { images: [ogImageUrl] }),
     },
     ...(logoUrl && {
       icons: {
         icon: `/api/favicon?url=${encodeURIComponent(logoUrl)}`,
-        apple: `/api/favicon?url=${encodeURIComponent(logoUrl)}`,
+        // apple-touch-icon → WhatsApp lo usa como fallback de preview si
+        // og:image no se pudo cargar. Usamos la misma versión optimizada.
+        apple: ogImageUrl!,
       },
     }),
   };
