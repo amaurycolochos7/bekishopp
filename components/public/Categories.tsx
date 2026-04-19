@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import type { Categoria, Configuracion } from '@/lib/types';
 
@@ -6,7 +9,11 @@ interface Props {
     config: Configuracion | null;
 }
 
+const INICIAL = 4;
+
 export default function Categories({ categorias, config }: Props) {
+    const [mostrarTodas, setMostrarTodas] = useState(false);
+
     if (categorias.length === 0) return null;
 
     const titulo = config?.texto_categorias_titulo || 'Explora Nuestras Categorías';
@@ -14,7 +21,8 @@ export default function Categories({ categorias, config }: Props) {
     const colorPrimario = config?.color_primario || '#1a365d';
     const colorAccento = config?.color_acento || '#e8a020';
 
-
+    const hayMas = categorias.length > INICIAL;
+    const categoriasVisibles = mostrarTodas ? categorias : categorias.slice(0, INICIAL);
 
     return (
         <section id="categorias" className="py-14 md:py-20 bg-white">
@@ -27,7 +35,7 @@ export default function Categories({ categorias, config }: Props) {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-                    {categorias.map((cat, i) => (
+                    {categoriasVisibles.map((cat) => (
                         <a
                             key={cat.id}
                             href={`/catalogo?categoria=${cat.id}`}
@@ -54,6 +62,31 @@ export default function Categories({ categorias, config }: Props) {
                         </a>
                     ))}
                 </div>
+
+                {hayMas && (
+                    <div className="flex justify-center mt-6">
+                        <button
+                            onClick={() => setMostrarTodas((v) => !v)}
+                            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold border transition-all hover:shadow-md"
+                            style={{
+                                color: colorPrimario,
+                                borderColor: `${colorPrimario}33`,
+                                backgroundColor: 'white',
+                            }}
+                        >
+                            {mostrarTodas ? 'Ver menos' : `Ver todas (${categorias.length})`}
+                            <svg
+                                className={`w-4 h-4 transition-transform ${mostrarTodas ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                )}
             </div>
         </section>
     );
