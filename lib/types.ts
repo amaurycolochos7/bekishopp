@@ -16,13 +16,15 @@ export interface Producto {
   descripcion: string | null;
   precio: number;
   stock: number;
+  // categoria_id = categoría principal (para breadcrumb, canonical URL y SEO)
   categoria_id: string | null;
   imagen_url: string | null;
   destacado: boolean;
   activo: boolean;
   precio_descuento: number | null;
   created_at: string;
-  categorias?: Categoria;
+  // Lista completa de categorías desde la tabla pivote producto_categorias
+  categorias?: Categoria[];
   imagenes?: ProductoImagen[];
 }
 

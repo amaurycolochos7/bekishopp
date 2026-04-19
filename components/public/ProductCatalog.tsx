@@ -36,9 +36,15 @@ export default function ProductCatalog({ productos, categorias, whatsapp, config
         }
     }, [searchParams]);
 
-    // Filtrar por categoría y búsqueda
+    // Filtrar por categoría (pivote muchos-a-muchos) y búsqueda.
+    // Un producto aparece en la categoría si es su categoría principal o
+    // está presente en producto.categorias[] (tabla pivote).
     const productosFiltrados = productos
-        .filter((p) => filtro === 'todos' || p.categoria_id === filtro)
+        .filter((p) => {
+            if (filtro === 'todos') return true;
+            if (p.categoria_id === filtro) return true;
+            return (p.categorias || []).some((c) => c.id === filtro);
+        })
         .filter((p) => {
             if (!busqueda.trim()) return true;
             const term = busqueda.toLowerCase();

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Producto, Categoria, ProductoImagen } from '@/lib/types';
+import { normalizarProductos, PRODUCTO_CON_CATEGORIAS } from '@/lib/productos';
 
 export default function AdminProductos() {
     const [productos, setProductos] = useState<Producto[]>([]);
@@ -17,7 +18,7 @@ export default function AdminProductos() {
     const [descripcion, setDescripcion] = useState('');
     const [precio, setPrecio] = useState('');
     const [stock, setStock] = useState('');
-    const [categoriaId, setCategoriaId] = useState('');
+    const [categoriasIds, setCategoriasIds] = useState<string[]>([]);
     const [destacado, setDestacado] = useState(false);
     const [activo, setActivo] = useState(true);
     const [precioDescuento, setPrecioDescuento] = useState('');
@@ -38,10 +39,10 @@ export default function AdminProductos() {
     const cargarDatos = useCallback(async () => {
         setCargando(true);
         const [prodRes, catRes] = await Promise.all([
-            supabase.from('productos').select('*, categorias(nombre)').order('created_at', { ascending: false }),
+            supabase.from('productos').select(PRODUCTO_CON_CATEGORIAS).order('created_at', { ascending: false }),
             supabase.from('categorias').select('*').order('orden'),
         ]);
-        setProductos((prodRes.data as Producto[]) || []);
+        setProductos(normalizarProductos(prodRes.data));
         setCategorias((catRes.data as Categoria[]) || []);
         setCargando(false);
     }, [supabase]);
@@ -57,7 +58,13 @@ export default function AdminProductos() {
             setDescripcion(producto.descripcion || '');
             setPrecio(producto.precio.toString());
             setStock(producto.stock.toString());
-            setCategoriaId(producto.categoria_id || '');
+            // Cargar todas las categorías desde el pivote. La primera de la lista
+            // es la principal (sincronizada con producto.categoria_id).
+            const idsPivote = (producto.categorias || []).map((c) => c.id);
+            const ids = producto.categoria_id
+                ? [producto.categoria_id, ...idsPivote.filter((id) => id !== producto.categoria_id)]
+                : idsPivote;
+            setCategoriasIds(ids);
             setDestacado(producto.destacado);
             setActivo(producto.activo);
             setPrecioDescuento(producto.precio_descuento ? producto.precio_descuento.toString() : '');
@@ -75,7 +82,7 @@ export default function AdminProductos() {
             setDescripcion('');
             setPrecio('');
             setStock('');
-            setCategoriaId('');
+            setCategoriasIds([]);
             setDestacado(false);
             setActivo(true);
             setPrecioDescuento('');
@@ -179,14 +186,16 @@ export default function AdminProductos() {
 
             const slug = generarSlug(nombre);
 
-            // 5. Guardar producto
+            // 5. Guardar producto. La primera categoría es la "principal"
+            // (se usa para breadcrumb/canonical/SEO); el resto va sólo al pivote.
+            const categoriaPrincipal = categoriasIds[0] || null;
             const datos = {
                 nombre,
                 slug,
                 descripcion,
                 precio: parseFloat(precio),
                 stock: parseInt(stock),
-                categoria_id: categoriaId || null,
+                categoria_id: categoriaPrincipal,
                 destacado,
                 activo,
                 precio_descuento: precioDescuento ? parseFloat(precioDescuento) : null,
@@ -202,7 +211,17 @@ export default function AdminProductos() {
                 productoId = data?.id;
             }
 
-            // 5. Insertar nuevas imágenes en producto_imagenes
+            // 6. Sincronizar tabla pivote producto_categorias
+            if (productoId) {
+                await supabase.from('producto_categorias').delete().eq('producto_id', productoId);
+                if (categoriasIds.length > 0) {
+                    await supabase.from('producto_categorias').insert(
+                        categoriasIds.map((categoria_id) => ({ producto_id: productoId, categoria_id }))
+                    );
+                }
+            }
+
+            // 7. Insertar nuevas imágenes en producto_imagenes
             if (productoId && nuevasUrls.length > 0) {
                 const maxOrden = imagenesExistentes.length;
                 const registros = nuevasUrls.map((url, i) => ({
@@ -262,7 +281,13 @@ export default function AdminProductos() {
                 const termino = busqueda.toLowerCase();
                 if (!prod.nombre.toLowerCase().includes(termino)) return false;
             }
-            if (filtroCategoria && prod.categoria_id !== filtroCategoria) return false;
+            if (filtroCategoria) {
+                const ids = new Set([
+                    prod.categoria_id,
+                    ...((prod.categorias || []).map((c) => c.id)),
+                ]);
+                if (!ids.has(filtroCategoria)) return false;
+            }
             return true;
         })
         .sort((a, b) => {
@@ -377,7 +402,9 @@ export default function AdminProductos() {
                                         </div>
                                     </td>
                                     <td className="py-3 px-4 text-gray-500 hidden sm:table-cell">
-                                        {(prod.categorias as unknown as { nombre: string })?.nombre || '—'}
+                                        {prod.categorias && prod.categorias.length > 0
+                                            ? prod.categorias.map((c) => c.nombre).join(', ')
+                                            : '—'}
                                     </td>
                                     <td className="py-3 px-4 text-right font-medium text-gray-800">
                                         {prod.precio_descuento != null ? (
@@ -498,17 +525,52 @@ export default function AdminProductos() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-                                <select
-                                    value={categoriaId}
-                                    onChange={(e) => setCategoriaId(e.target.value)}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-sm"
-                                >
-                                    <option value="">Sin categoría</option>
-                                    {categorias.map((cat) => (
-                                        <option key={cat.id} value={cat.id}>{cat.nombre}</option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Categorías
+                                    <span className="text-xs text-gray-400 font-normal ml-2">
+                                        (selecciona una o varias · la primera es la principal)
+                                    </span>
+                                </label>
+                                <div className="flex flex-wrap gap-2 p-3 rounded-xl border border-gray-200 bg-gray-50 max-h-44 overflow-y-auto">
+                                    {categorias.length === 0 && (
+                                        <span className="text-xs text-gray-400">No hay categorías creadas todavía.</span>
+                                    )}
+                                    {categorias.map((cat) => {
+                                        const seleccionada = categoriasIds.includes(cat.id);
+                                        const esPrincipal = seleccionada && categoriasIds[0] === cat.id;
+                                        return (
+                                            <button
+                                                key={cat.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setCategoriasIds((prev) =>
+                                                        prev.includes(cat.id)
+                                                            ? prev.filter((id) => id !== cat.id)
+                                                            : [...prev, cat.id]
+                                                    );
+                                                }}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors flex items-center gap-1.5 ${
+                                                    seleccionada
+                                                        ? 'bg-amber-500 border-amber-500 text-white'
+                                                        : 'bg-white border-gray-200 text-gray-600 hover:border-amber-300'
+                                                }`}
+                                                title={esPrincipal ? 'Categoría principal' : cat.nombre}
+                                            >
+                                                {esPrincipal && (
+                                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                                                        <path d="M12 2l2.39 7.36H22l-6.2 4.5 2.39 7.36L12 16.72l-6.19 4.5 2.39-7.36L2 9.36h7.61z" />
+                                                    </svg>
+                                                )}
+                                                {cat.nombre}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                {categoriasIds.length > 1 && (
+                                    <p className="text-[11px] text-gray-400 mt-2">
+                                        {categoriasIds.length} categorías seleccionadas. La principal se usa para breadcrumb y URL canónica.
+                                    </p>
+                                )}
                             </div>
 
                             {/* Galería de imágenes */}

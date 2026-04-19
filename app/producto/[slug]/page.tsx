@@ -10,6 +10,7 @@ import AddToCartButton from './AddToCartButton';
 import type { Configuracion, Producto, ProductoImagen } from '@/lib/types';
 import { notFound } from 'next/navigation';
 import ProductGallery from './ProductGallery';
+import { normalizarProducto, normalizarProductos, PRODUCTO_CON_CATEGORIAS } from '@/lib/productos';
 
 export const revalidate = 60;
 
@@ -29,9 +30,9 @@ export default async function ProductoDetalle({ params }: PageProps) {
         const supabase = await createClient();
 
         // Intentar buscar por slug primero, luego por id como fallback
-        let productoRes = await supabase.from('productos').select('*, categorias(nombre)').eq('slug', slug).single();
+        let productoRes = await supabase.from('productos').select(PRODUCTO_CON_CATEGORIAS).eq('slug', slug).single();
         if (!productoRes.data) {
-            productoRes = await supabase.from('productos').select('*, categorias(nombre)').eq('id', slug).single();
+            productoRes = await supabase.from('productos').select(PRODUCTO_CON_CATEGORIAS).eq('id', slug).single();
         }
         const configRes = await supabase.from('configuracion').select('*').limit(1).single();
 
@@ -39,7 +40,7 @@ export default async function ProductoDetalle({ params }: PageProps) {
             notFound();
         }
 
-        producto = productoRes.data as Producto;
+        producto = normalizarProducto(productoRes.data);
         config = (configRes.data as Configuracion) || null;
 
         // Cargar imágenes de la galería
@@ -50,16 +51,26 @@ export default async function ProductoDetalle({ params }: PageProps) {
             .order('orden');
         imagenes = (imagenesData as ProductoImagen[]) || [];
 
-        // Productos relacionados
-        if (producto.categoria_id) {
-            const relacionadosRes = await supabase
+        // Productos relacionados: cualquier producto que comparta al menos una
+        // categoría con el actual (vía tabla pivote). Usamos !inner + .in para
+        // filtrar y dedupe por id ya que Supabase devuelve un row por producto.
+        const catIds = (producto.categorias || []).map((c) => c.id);
+        if (catIds.length === 0 && producto.categoria_id) catIds.push(producto.categoria_id);
+        if (catIds.length > 0) {
+            const { data: relData } = await supabase
                 .from('productos')
-                .select('*, categorias(nombre)')
+                .select(`${PRODUCTO_CON_CATEGORIAS}, producto_categorias!inner(categoria_id)`)
                 .eq('activo', true)
-                .eq('categoria_id', producto.categoria_id)
+                .in('producto_categorias.categoria_id', catIds)
                 .neq('id', producto.id)
-                .limit(4);
-            relacionados = (relacionadosRes.data as Producto[]) || [];
+                .limit(8);
+            const normalizados = normalizarProductos(relData);
+            const vistos = new Set<string>();
+            relacionados = normalizados.filter((p) => {
+                if (vistos.has(p.id)) return false;
+                vistos.add(p.id);
+                return true;
+            }).slice(0, 4);
         }
     } catch {
         notFound();
@@ -110,11 +121,19 @@ export default async function ProductoDetalle({ params }: PageProps) {
 
                         {/* Info del producto */}
                         <div className="flex flex-col">
-                            {producto.categorias && (
-                                <span className="inline-flex items-center gap-1.5 text-sm text-amber-600 font-medium mb-2">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                    {(producto.categorias as unknown as { nombre: string }).nombre}
-                                </span>
+                            {producto.categorias && producto.categorias.length > 0 && (
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                    {producto.categorias.map((cat) => (
+                                        <Link
+                                            key={cat.id}
+                                            href={`/catalogo?categoria=${cat.id}`}
+                                            className="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 font-medium"
+                                        >
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                            {cat.nombre}
+                                        </Link>
+                                    ))}
+                                </div>
                             )}
 
                             <h1 className="text-3xl md:text-4xl font-bold text-[#1a365d] mb-4">

@@ -9,7 +9,8 @@ import Contact from '@/components/public/Contact';
 import Footer from '@/components/public/Footer';
 import WhatsAppFloat from '@/components/public/WhatsAppFloat';
 import CartDrawer from '@/components/public/CartDrawer';
-import type { Configuracion, Categoria, Producto, Servicio } from '@/lib/types';
+import type { Configuracion, Categoria, Servicio } from '@/lib/types';
+import { normalizarProductos, PRODUCTO_CON_CATEGORIAS } from '@/lib/productos';
 
 export const revalidate = 60;
 
@@ -19,13 +20,13 @@ async function obtenerDatos() {
     const [configRes, categoriasRes, productosRes, serviciosRes] = await Promise.all([
       supabase.from('configuracion').select('*').limit(1).single(),
       supabase.from('categorias').select('*').order('orden', { ascending: true }),
-      supabase.from('productos').select('*, categorias(nombre)').eq('activo', true).order('created_at', { ascending: false }),
+      supabase.from('productos').select(PRODUCTO_CON_CATEGORIAS).eq('activo', true).order('created_at', { ascending: false }),
       supabase.from('servicios').select('*').eq('activo', true),
     ]);
     return {
       config: (configRes.data as Configuracion) || null,
       categorias: (categoriasRes.data as Categoria[]) || [],
-      productos: (productosRes.data as Producto[]) || [],
+      productos: normalizarProductos(productosRes.data),
       servicios: (serviciosRes.data as Servicio[]) || [],
     };
   } catch {
